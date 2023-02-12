@@ -68,7 +68,7 @@ jobs:
             spec:
               containers:
               - name: ${{ env.K8S_CONTAINER_NAME }}
-                image: ${{ env.ECR_REGISTRY }}/your-image-name:${{ env.GITHUB_SHA }}
+                image: ${{ env.ECR_REGISTRY }}/new-${{ github.sha }} :${{ env.GITHUB_SHA }}
                 ports:
                 - containerPort: 8085" > deployment.yaml
 
