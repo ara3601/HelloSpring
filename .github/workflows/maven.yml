@@ -74,11 +74,18 @@ jobs:
                 image: ${ECR_REGISTRY}:${GITHUB_SHA}
                 ports:
                 - containerPort: 8085" > deployment.yaml
-
+    - name: Configure kubeconfig
+      uses: aws-actions/configure-kubectl@v1
+      with:
+        cluster-name: new-eks-cluster
+        kubeconfig: ${{ secrets.KUBECONFIG }}
    
     - name: Deploy to EKS
       run: |
-        kubectl apply -f deployment.yaml
-    env:
-              AWS_REGION: ap-south-1
-              AWS_DEFAULT_REGION: ap-south-1
+       kubectl config use-context new-eks-cluster
+       kubectl apply -f deployment.yaml
+      env:
+       KUBECONFIG: ${{ secrets.KUBECONFIG }}
+       AWS_REGION: ap-south-1
+       AWS_DEFAULT_REGION: ap-south-1
+ 
