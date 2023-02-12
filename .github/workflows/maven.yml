@@ -77,14 +77,8 @@ jobs:
 
    
     - name: Deploy to EKS
-      uses: docker/deploy-to-kubernetes@v1
-      with:
-        args: apply -f deployment.yaml
-      env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          K8S_NAMESPACE:  default
-          K8S_DEPLOYMENT_NAME:  server-demo
-          K8S_CONTAINER_NAME: back-end
+      run: |
+        kubectl apply -f deployment.yaml
     env:
               AWS_REGION: ap-south-1
               AWS_DEFAULT_REGION: ap-south-1
