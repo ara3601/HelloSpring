@@ -31,11 +31,6 @@ jobs:
       run: mvn clean install
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-    - name: Install kubectl
-      uses: azure/setup-kubectl@v2.0
-      with:
-        version: 'v1.24.0'
-      id: install
       
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1-node16
@@ -56,15 +51,40 @@ jobs:
       run: |
        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-    - name: Update kube config
-      run: aws eks update-kubeconfig --name new-eks-cluster --region ap-south-1
-      
-    - name: Deploy to EKS
+       
+    - name: Define deployment file
       run: |
-        kubectl apply -f deployment.yaml
-        
-    - name: services
-      run: |
-        kubectl apply -f service.yaml
+        echo "apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+          name: ${{ env.K8S_DEPLOYMENT_NAME }}
+          namespace: ${{ env.K8S_NAMESPACE }}
+        spec:
+          replicas: 2
+          selector:
+            matchLabels:
+              app: web
+          template:
+            metadata:
+              labels:
+                app: web
+            spec:
+              containers:
+              - name: ${{ env.K8S_CONTAINER_NAME }}
+                image: ${ECR_REGISTRY}:${GITHUB_SHA}
+                ports:
+                - containerPort: 8085" > deployment.yaml
 
    
+    - name: Deploy to EKS
+      uses: docker/deploy-to-kubernetes@v1
+      with:
+        args: apply -f deployment.yaml
+      env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          K8S_NAMESPACE:  default
+          K8S_DEPLOYMENT_NAME:  server-demo
+          K8S_CONTAINER_NAME: back-end
+    env:
+              AWS_REGION: ap-south-1
+              AWS_DEFAULT_REGION: ap-south-1
