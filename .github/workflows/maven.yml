@@ -49,33 +49,31 @@ jobs:
        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
        
-    - name: Define deployment file
+    - name: Generate deployment YAML
       run: |
-        echo "apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: demo-server
-          namespace: default
-        spec:
-          replicas: 2
-          selector:
-            matchLabels:
-              app: web
-          template:
-            metadata:
-              labels:
-                app: web
-            spec:
-              containers:
-              - name: back-end
-                image: ${{ env.ECR_REGISTRY }}:${{ env.GITHUB_SHA }}
-                ports:
-                - containerPort: 8085" > deployment.yaml
-
-   
+       echo "apiVersion: apps/v1" > deployment.yaml
+       echo "kind: Deployment" >> deployment.yaml
+       echo "metadata:" >> deployment.yaml
+       echo "  name: server-demo" >> deployment.yaml
+       echo "  namespace: default" >> deployment.yaml
+       echo "spec:" >> deployment.yaml
+       echo "  replicas: 2" >> deployment.yaml
+       echo "  selector:" >> deployment.yaml
+       echo "    matchLabels:" >> deployment.yaml
+       echo "      app: my-app" >> deployment.yaml
+       echo "  template:" >> deployment.yaml
+       echo "    metadata:" >> deployment.yaml
+       echo "      labels:" >> deployment.yaml
+       echo "        app: my-app" >> deployment.yaml
+       echo "    spec:" >> deployment.yaml
+       echo "      containers:" >> deployment.yaml
+       echo "        - name: back-end" >> deployment.yaml
+       echo "          image: ${ECR_REGISTRY}:${GITHUB_SHA}" >> deployment.yaml
+       echo "          ports:" >> deployment.yaml
+       echo "            - containerPort: 8085" >> deployment.yaml
+  
     - name: Update kube config
-      run: aws eks update-kubeconfig --name new-eks-cluster --region ap-south-1
-
+      run: aws eks update-kubeconfig --name fedhr-cluster --region us-east-1
     - name: Deploy to EKS
       run: |
         kubectl apply -f deployment.yaml
