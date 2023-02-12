@@ -82,6 +82,7 @@ jobs:
    
     - name: Deploy to EKS
       run: |
+        kubectl config use-context $K8S_CLUSTER_NAME
         echo "$DEPLOYMENT_YAML" | kubectl apply -f -
       env:
         KUBECONFIG: ${{ steps.kubeconfig.outputs.kubeconfig }}
