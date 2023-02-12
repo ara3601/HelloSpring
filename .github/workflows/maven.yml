@@ -57,8 +57,8 @@ jobs:
         echo "apiVersion: apps/v1
         kind: Deployment
         metadata:
-          name: ${{ env.K8S_DEPLOYMENT_NAME }}
-          namespace: ${{ env.K8S_NAMESPACE }}
+          name: demo-server
+          namespace: default
         spec:
           replicas: 2
           selector:
@@ -70,7 +70,7 @@ jobs:
                 app: web
             spec:
               containers:
-              - name: ${{ env.K8S_CONTAINER_NAME }}
+              - name: back-end
                 image: ${ECR_REGISTRY}:${GITHUB_SHA}
                 ports:
                 - containerPort: 8085" > deployment.yaml
