@@ -13,7 +13,33 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
+env:
+  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+  K8S_NAMESPACE: default
+  K8S_DEPLOYMENT_NAME: server-demo
+  K8S_CONTAINER_NAME: back-end
+  
+  DEPLOYMENT_YAML: |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: ${K8S_DEPLOYMENT_NAME}
+      namespace: ${K8S_NAMESPACE}
+    spec:
+      replicas: 2
+      selector:
+        matchLabels:
+          app: ${K8S_CONTAINER_NAME}
+      template:
+        metadata:
+          labels:
+            app: ${K8S_CONTAINER_NAME}
+        spec:
+          containers:
+            - name: ${K8S_CONTAINER_NAME}
+              image: ${ECR_REGISTRY}:${GITHUB_SHA}
+              ports:
+                - containerPort: 8085
 jobs:
   build:
 
@@ -51,3 +77,14 @@ jobs:
       run: |
        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
        docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+
+   
+    - name: Deploy to EKS
+      run: |
+        echo "$DEPLOYMENT_YAML" | kubectl apply -f -
+      env:
+        KUBECONFIG: ${{ steps.kubeconfig.outputs.kubeconfig }}
+    env:
+              AWS_REGION: ap-south-1
+              AWS_DEFAULT_REGION: ap-south-1
